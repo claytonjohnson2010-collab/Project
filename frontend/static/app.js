@@ -357,8 +357,8 @@ function renderHoldings(list, priceMap) {
         <td>${h.purchase_date || '—'}</td>
         <td class="muted">${esc(h.notes || '')}</td>
         <td style="white-space:nowrap">
-          <button class="btn btn-edit" onclick="openEditModal(${h.id})">Edit</button>
-          <button class="btn btn-danger" onclick="deleteHolding(${h.id})">Del</button>
+          <button class="btn btn-edit" data-action="edit" data-id="${h.id}">Edit</button>
+          <button class="btn btn-danger" data-action="delete" data-id="${h.id}">Del</button>
         </td>
       </tr>`;
     }).join('');
@@ -411,6 +411,15 @@ function toggleAllGroups(expand) {
   renderHoldings(holdings, prices);
 }
 
+// ---- Event delegation for edit/delete buttons ----
+document.addEventListener('click', e => {
+  const btn = e.target.closest('[data-action]');
+  if (!btn) return;
+  const id = Number(btn.dataset.id);
+  if (btn.dataset.action === 'edit') openEditModal(id);
+  if (btn.dataset.action === 'delete') deleteHolding(id);
+});
+
 // ---- Modal ----
 function setQty(val) {
   document.getElementById('f-quantity').value = val;
@@ -424,8 +433,8 @@ function openAddModal() {
 }
 
 function openEditModal(id) {
-  const h = holdings.find(x => x.id === id);
-  if (!h) return;
+  const h = holdings.find(x => Number(x.id) === Number(id));
+  if (!h) { console.warn('Holding not found:', id, holdings); return; }
   document.getElementById('modal-title').textContent = 'Edit Holding';
   document.getElementById('holding-id').value = h.id;
   document.getElementById('f-metal').value = h.metal;
@@ -464,7 +473,7 @@ async function submitHolding(e) {
 
 async function deleteHolding(id) {
   if (!confirm('Delete this holding?')) return;
-  await fetch(`/api/holdings/${id}`, { method: 'DELETE' });
+  await fetch(`/api/holdings/${Number(id)}`, { method: 'DELETE' });
   load();
 }
 
