@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Precious Metals Tracker</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <h1>&#x1F4B0; Precious Metals Portfolio</h1>
+      <span id="last-updated" class="muted"></span>
+    </div>
+  </header>
+
+  <main>
+    <!-- Summary Cards -->
+    <section id="summary" class="cards-row">
+      <div class="card summary-card">
+        <div class="label">Total Cost Basis</div>
+        <div class="value" id="total-cost">—</div>
+      </div>
+      <div class="card summary-card">
+        <div class="label">Market Value</div>
+        <div class="value" id="total-value">—</div>
+      </div>
+      <div class="card summary-card">
+        <div class="label">Gain / Loss</div>
+        <div class="value" id="total-gl">—</div>
+        <div class="sublabel" id="total-gl-pct"></div>
+      </div>
+    </section>
+
+    <!-- Spot Prices -->
+    <section>
+      <h2>Spot Prices <span class="muted" style="font-size:0.8rem">(per troy oz)</span></h2>
+      <div class="cards-row" id="spot-prices"></div>
+    </section>
+
+    <!-- By Metal Breakdown -->
+    <section>
+      <h2>Holdings by Metal</h2>
+      <div class="cards-row" id="by-metal"></div>
+    </section>
+
+    <!-- Holdings Table -->
+    <section>
+      <div class="section-header">
+        <h2>All Holdings</h2>
+        <button class="btn btn-primary" onclick="openAddModal()">+ Add Holding</button>
+      </div>
+      <div class="table-wrap">
+        <table id="holdings-table">
+          <thead>
+            <tr>
+              <th>Metal</th>
+              <th>Description</th>
+              <th>Qty</th>
+              <th>Unit</th>
+              <th>Oz (troy)</th>
+              <th>Cost Basis</th>
+              <th>Market Value</th>
+              <th>Gain / Loss</th>
+              <th>Purchase Date</th>
+              <th>Notes</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="holdings-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- Add / Edit Modal -->
+  <div id="modal-overlay" class="hidden" onclick="closeModal(event)">
+    <div class="modal" onclick="event.stopPropagation()">
+      <h2 id="modal-title">Add Holding</h2>
+      <form id="holding-form" onsubmit="submitHolding(event)">
+        <input type="hidden" id="holding-id" />
+        <div class="form-grid">
+          <label>
+            Metal
+            <select id="f-metal" required>
+              <option value="gold">Gold</option>
+              <option value="silver">Silver</option>
+              <option value="platinum">Platinum</option>
+              <option value="palladium">Palladium</option>
+            </select>
+          </label>
+          <label>
+            Description
+            <input type="text" id="f-description" placeholder="e.g. 1oz Gold Eagle" required />
+          </label>
+          <label>
+            Quantity
+            <input type="number" id="f-quantity" step="any" min="0.001" required />
+          </label>
+          <label>
+            Unit
+            <select id="f-unit" required>
+              <option value="oz">Troy oz</option>
+              <option value="g">Grams</option>
+              <option value="kg">Kilograms</option>
+            </select>
+          </label>
+          <label>
+            Total Cost Basis (USD)
+            <input type="number" id="f-cost" step="any" min="0" placeholder="What you paid" required />
+          </label>
+          <label>
+            Purchase Date
+            <input type="date" id="f-date" />
+          </label>
+          <label class="full-width">
+            Notes
+            <input type="text" id="f-notes" placeholder="Optional" />
+          </label>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn" onclick="closeModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
