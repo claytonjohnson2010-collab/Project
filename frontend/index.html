@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Precious Metals Tracker</title>
   <link rel="stylesheet" href="/static/style.css" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <script src="/static/chart.min.js"></script>
 </head>
 <body>
   <header>
@@ -96,28 +96,13 @@
     <section>
       <div class="section-header">
         <h2>All Holdings</h2>
-        <button class="btn btn-primary" onclick="openAddModal()">+ Add Holding</button>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn" onclick="toggleAllGroups(true)">Expand All</button>
+          <button class="btn" onclick="toggleAllGroups(false)">Collapse All</button>
+          <button class="btn btn-primary" onclick="openAddModal()">+ Add Holding</button>
+        </div>
       </div>
-      <div class="table-wrap">
-        <table id="holdings-table">
-          <thead>
-            <tr>
-              <th>Metal</th>
-              <th>Description</th>
-              <th>Qty</th>
-              <th>Unit</th>
-              <th>Oz (troy)</th>
-              <th>Cost Basis</th>
-              <th>Market Value</th>
-              <th>Gain / Loss</th>
-              <th>Purchase Date</th>
-              <th>Notes</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody id="holdings-body"></tbody>
-        </table>
-      </div>
+      <div id="holdings-groups"></div>
     </section>
   </main>
 
@@ -143,7 +128,16 @@
           </label>
           <label>
             Quantity
-            <input type="number" id="f-quantity" step="any" min="0.001" required />
+            <input type="number" id="f-quantity" step="any" min="0.0001" required />
+            <div class="fraction-btns">
+              <span class="muted" style="font-size:0.75rem">Quick:</span>
+              <button type="button" class="frac-btn" onclick="setQty(0.1)">1/10</button>
+              <button type="button" class="frac-btn" onclick="setQty(0.25)">1/4</button>
+              <button type="button" class="frac-btn" onclick="setQty(0.5)">1/2</button>
+              <button type="button" class="frac-btn" onclick="setQty(1)">1</button>
+              <button type="button" class="frac-btn" onclick="setQty(5)">5</button>
+              <button type="button" class="frac-btn" onclick="setQty(10)">10</button>
+            </div>
           </label>
           <label>
             Unit
