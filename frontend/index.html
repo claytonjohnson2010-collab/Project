@@ -8,113 +8,119 @@
   <script src="/static/chart.min.js"></script>
 </head>
 <body>
-  <header>
-    <div class="header-inner">
-      <h1>&#x1F4B0; Precious Metals Portfolio</h1>
-      <div class="header-right">
-        <span id="last-updated" class="muted"></span>
-        <button class="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark mode">
-          <span id="theme-icon">☀️</span>
-        </button>
+
+  <!-- ── Top nav ── -->
+  <nav class="topnav">
+    <div class="topnav-inner">
+      <div class="topnav-brand">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        Metals Tracker
+      </div>
+      <div class="topnav-right">
+        <span id="last-updated" class="muted text-xs"></span>
+        <button class="icon-btn" onclick="toggleTheme()" title="Toggle theme"><span id="theme-icon">☀️</span></button>
       </div>
     </div>
-  </header>
+  </nav>
+
+  <!-- ── Portfolio Hero ── -->
+  <div class="hero">
+    <div class="hero-inner">
+      <div class="hero-left">
+        <div class="hero-eyebrow">Total Portfolio Value</div>
+        <div class="hero-value" id="hero-value">—</div>
+        <div class="hero-gl" id="hero-gl"></div>
+        <div class="hero-cost">Cost basis: <span id="hero-cost">—</span></div>
+      </div>
+      <div class="hero-right" id="hero-allocation"></div>
+      <button class="visibility-btn" onclick="toggleVisibility()" id="visibility-btn" title="Show/hide balances">
+        <svg id="eye-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+      </button>
+    </div>
+  </div>
 
   <main>
-    <!-- Summary Cards -->
-    <section id="summary" class="cards-row">
-      <div class="card summary-card">
-        <div class="label">Total Cost Basis</div>
-        <div class="value" id="total-cost">—</div>
-      </div>
-      <div class="card summary-card">
-        <div class="label">Market Value</div>
-        <div class="value" id="total-value">—</div>
-      </div>
-      <div class="card summary-card">
-        <div class="label">Gain / Loss</div>
-        <div class="value" id="total-gl">—</div>
-        <div class="sublabel" id="total-gl-pct"></div>
-      </div>
-    </section>
 
     <!-- Spot Prices -->
     <section>
-      <h2>Spot Prices <span class="muted" style="font-size:0.8rem">(per troy oz)</span></h2>
+      <div class="section-label">Live Spot Prices <span class="muted">(per troy oz)</span></div>
       <div class="cards-row" id="spot-prices"></div>
     </section>
 
-    <!-- Metrics: 52-week + Gold/Silver ratio -->
+    <!-- Market Metrics -->
     <section>
-      <h2>Market Metrics</h2>
+      <div class="section-label">Market Metrics</div>
       <div class="cards-row" id="metrics-row"></div>
     </section>
 
     <!-- Historical Charts -->
     <section>
       <div class="section-header">
-        <h2>Price History</h2>
-        <div class="range-tabs" id="range-tabs">
-          <button class="range-btn active" onclick="setRange('1W')">1W</button>
-          <button class="range-btn" onclick="setRange('1M')">1M</button>
-          <button class="range-btn" onclick="setRange('3M')">3M</button>
-          <button class="range-btn" onclick="setRange('6M')">6M</button>
-          <button class="range-btn" onclick="setRange('1Y')">1Y</button>
-          <button class="range-btn" onclick="setRange('5Y')">5Y</button>
+        <div class="section-label" style="margin-bottom:0">Price History</div>
+        <div class="range-tabs">
+          <button class="range-btn active" onclick="setRange(this,'1W')">1W</button>
+          <button class="range-btn" onclick="setRange(this,'1M')">1M</button>
+          <button class="range-btn" onclick="setRange(this,'3M')">3M</button>
+          <button class="range-btn" onclick="setRange(this,'6M')">6M</button>
+          <button class="range-btn" onclick="setRange(this,'1Y')">1Y</button>
+          <button class="range-btn" onclick="setRange(this,'5Y')">5Y</button>
         </div>
       </div>
-      <div class="charts-grid" id="history-charts">
-        <div class="chart-card card"><div class="chart-label">Gold</div><canvas id="chart-gold"></canvas></div>
-        <div class="chart-card card"><div class="chart-label">Silver</div><canvas id="chart-silver"></canvas></div>
-        <div class="chart-card card"><div class="chart-label">Platinum</div><canvas id="chart-platinum"></canvas></div>
-        <div class="chart-card card"><div class="chart-label">Palladium</div><canvas id="chart-palladium"></canvas></div>
+      <div class="charts-grid">
+        <div class="card chart-card"><div class="chart-label gold-text">Gold</div><canvas id="chart-gold"></canvas></div>
+        <div class="card chart-card"><div class="chart-label silver-text">Silver</div><canvas id="chart-silver"></canvas></div>
+        <div class="card chart-card"><div class="chart-label platinum-text">Platinum</div><canvas id="chart-platinum"></canvas></div>
+        <div class="card chart-card"><div class="chart-label palladium-text">Palladium</div><canvas id="chart-palladium"></canvas></div>
       </div>
     </section>
 
-    <!-- Portfolio Bar Chart -->
+    <!-- Portfolio Allocation Charts -->
     <section>
-      <h2>Portfolio Allocation</h2>
+      <div class="section-label">Portfolio Allocation</div>
       <div class="cards-row">
-        <div class="card" style="flex:2;min-width:300px">
-          <div class="chart-label" style="margin-bottom:10px">Value by Metal</div>
+        <div class="card" style="flex:2;min-width:280px">
+          <div class="chart-label" style="margin-bottom:12px">Value by Metal</div>
           <canvas id="chart-allocation" height="80"></canvas>
         </div>
-        <div class="card" style="flex:2;min-width:300px">
-          <div class="chart-label" style="margin-bottom:10px">Cost vs Market Value</div>
+        <div class="card" style="flex:2;min-width:280px">
+          <div class="chart-label" style="margin-bottom:12px">Cost vs Market Value</div>
           <canvas id="chart-costvsvalue" height="80"></canvas>
         </div>
       </div>
     </section>
 
-    <!-- By Metal Breakdown -->
+    <!-- By Metal -->
     <section>
-      <h2>Holdings by Metal</h2>
+      <div class="section-label">Holdings by Metal</div>
       <div class="cards-row" id="by-metal"></div>
     </section>
 
-    <!-- Holdings Table -->
+    <!-- All Holdings -->
     <section>
       <div class="section-header">
-        <h2>All Holdings</h2>
-        <div style="display:flex;gap:8px;align-items:center">
-          <button class="btn" onclick="toggleAllGroups(true)">Expand All</button>
-          <button class="btn" onclick="toggleAllGroups(false)">Collapse All</button>
-          <button class="btn btn-primary" onclick="openAddModal()">+ Add Holding</button>
+        <div class="section-label" style="margin-bottom:0">All Holdings</div>
+        <div class="btn-group">
+          <button class="btn btn-sm" onclick="toggleAllGroups(true)">Expand All</button>
+          <button class="btn btn-sm" onclick="toggleAllGroups(false)">Collapse All</button>
+          <button class="btn btn-primary btn-sm" onclick="openAddModal()">+ Add Holding</button>
         </div>
       </div>
       <div id="holdings-groups"></div>
     </section>
+
   </main>
 
-  <!-- Add / Edit Modal -->
+  <!-- Modal -->
   <div id="modal-overlay" class="hidden" onclick="closeModal(event)">
     <div class="modal" onclick="event.stopPropagation()">
-      <h2 id="modal-title">Add Holding</h2>
+      <div class="modal-header">
+        <h3 id="modal-title">Add Holding</h3>
+        <button class="icon-btn" onclick="closeModal()">✕</button>
+      </div>
       <form id="holding-form" onsubmit="submitHolding(event)">
         <input type="hidden" id="holding-id" />
         <div class="form-grid">
-          <label>
-            Metal
+          <label>Metal
             <select id="f-metal" required>
               <option value="gold">Gold</option>
               <option value="silver">Silver</option>
@@ -122,15 +128,13 @@
               <option value="palladium">Palladium</option>
             </select>
           </label>
-          <label>
-            Description
+          <label>Description
             <input type="text" id="f-description" placeholder="e.g. 1oz Gold Eagle" required />
           </label>
-          <label>
-            Quantity
+          <label>Quantity
             <input type="number" id="f-quantity" step="any" min="0.0001" required />
             <div class="fraction-btns">
-              <span class="muted" style="font-size:0.75rem">Quick:</span>
+              <span class="text-xs muted">Quick:</span>
               <button type="button" class="frac-btn" onclick="setQty(0.1)">1/10</button>
               <button type="button" class="frac-btn" onclick="setQty(0.25)">1/4</button>
               <button type="button" class="frac-btn" onclick="setQty(0.5)">1/2</button>
@@ -139,30 +143,26 @@
               <button type="button" class="frac-btn" onclick="setQty(10)">10</button>
             </div>
           </label>
-          <label>
-            Unit
+          <label>Unit
             <select id="f-unit" required>
               <option value="oz">Troy oz</option>
               <option value="g">Grams</option>
               <option value="kg">Kilograms</option>
             </select>
           </label>
-          <label>
-            Total Cost Basis (USD)
+          <label>Total Cost Basis (USD)
             <input type="number" id="f-cost" step="any" min="0" placeholder="What you paid" required />
           </label>
-          <label>
-            Purchase Date
+          <label>Purchase Date
             <input type="date" id="f-date" />
           </label>
-          <label class="full-width">
-            Notes
+          <label class="full-width">Notes
             <input type="text" id="f-notes" placeholder="Optional" />
           </label>
         </div>
         <div class="modal-actions">
           <button type="button" class="btn" onclick="closeModal()">Cancel</button>
-          <button type="submit" class="btn btn-primary">Save</button>
+          <button type="submit" class="btn btn-primary">Save Holding</button>
         </div>
       </form>
     </div>
