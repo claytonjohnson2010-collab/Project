@@ -7,7 +7,7 @@ import os
 logger = logging.getLogger(__name__)
 
 DB_PATH = os.environ.get("DB_PATH", "/data/metals.db")
-CACHE_TTL = int(os.environ.get("PRICE_CACHE_TTL_MINUTES", "15"))
+CACHE_TTL = int(os.environ.get("PRICE_CACHE_TTL_MINUTES", "5"))
 
 TICKERS = {
     "gold": "GC=F",

@@ -203,6 +203,13 @@ body {
   text-align: right;
   flex-shrink: 0;
 }
+.alloc-oz {
+  font-size: 0.75rem;
+  color: var(--muted2);
+  width: 80px;
+  text-align: right;
+  flex-shrink: 0;
+}
 .alloc-val {
   font-size: 0.75rem;
   color: var(--muted2);
@@ -210,6 +217,8 @@ body {
   text-align: right;
   flex-shrink: 0;
 }
+
+@keyframes spin { to { transform: rotate(360deg); } }
 
 /* eye / visibility toggle */
 .visibility-btn {

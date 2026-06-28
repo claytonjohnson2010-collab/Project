@@ -127,14 +127,16 @@ function renderHero(p) {
   alloc.innerHTML = '';
   const totalValue = p.total_value || 0;
   (p.by_metal || []).forEach(m => {
-    const pct = totalValue > 0 ? (m.market_value / totalValue * 100) : 0;
+    const pct   = totalValue > 0 ? (m.market_value / totalValue * 100) : 0;
     const color = METAL_COLORS[m.metal];
+    const ozStr = fmtOz(m.total_oz);
     alloc.innerHTML += `
       <div class="alloc-row">
         <div class="alloc-label" style="color:${color}">${METAL_LABELS[m.metal]}</div>
         <div class="alloc-bar-track">
           <div class="alloc-bar-fill" style="width:${pct.toFixed(1)}%;background:${color}"></div>
         </div>
+        <div class="alloc-oz">${ozStr}</div>
         <div class="alloc-pct">${pct.toFixed(0)}%</div>
         <div class="alloc-val blur-val">${fmt(m.market_value)}</div>
       </div>`;
@@ -602,6 +604,21 @@ function hexAlpha(hex, a) {
   const g = parseInt(hex.slice(3,5),16);
   const b = parseInt(hex.slice(5,7),16);
   return `rgba(${r},${g},${b},${a})`;
+}
+
+// ─── Refresh prices ───────────────────────────────────────────────────────
+async function refreshPrices() {
+  const btn  = document.getElementById('refresh-btn');
+  const icon = document.getElementById('refresh-icon');
+  btn.disabled = true;
+  icon.style.animation = 'spin 0.8s linear infinite';
+  try {
+    await fetch('/api/prices/refresh', { method: 'POST' });
+    await load();
+  } finally {
+    btn.disabled = false;
+    icon.style.animation = '';
+  }
 }
 
 // ─── Init ─────────────────────────────────────────────────────────────────

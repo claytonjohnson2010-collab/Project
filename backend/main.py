@@ -101,6 +101,16 @@ async def current_prices():
     return await get_prices()
 
 
+@app.post("/api/prices/refresh")
+async def refresh_prices():
+    """Bust the price cache and fetch fresh spot prices immediately."""
+    async with aiosqlite.connect(os.environ.get("DB_PATH", "/data/metals.db")) as db:
+        await db.execute("DELETE FROM price_cache")
+        await db.commit()
+    fresh = await get_prices()
+    return fresh
+
+
 @app.get("/api/portfolio")
 async def portfolio_summary(db: aiosqlite.Connection = Depends(get_db)):
     holdings = await db.execute_fetchall("SELECT * FROM holdings")

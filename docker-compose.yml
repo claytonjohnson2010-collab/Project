@@ -8,4 +8,4 @@ services:
     volumes:
       - ./data:/data  # SQLite database persists here
     environment:
-      - PRICE_CACHE_TTL_MINUTES=15   # How often to refresh spot prices
+      - PRICE_CACHE_TTL_MINUTES=5    # How often to refresh spot prices
