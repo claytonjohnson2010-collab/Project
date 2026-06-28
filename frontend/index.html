@@ -84,8 +84,15 @@
 
     <!-- Portfolio Allocation Charts -->
     <section>
-      <div class="section-label">Portfolio Allocation</div>
-      <div class="cards-row">
+      <div class="section-header">
+        <div class="section-label" style="margin-bottom:0">Portfolio Allocation</div>
+        <div class="range-tabs">
+          <button class="range-btn active" id="alloc-bar-btn" onclick="setAllocView('bar')">Bar</button>
+          <button class="range-btn" id="alloc-pie-btn" onclick="setAllocView('pie')">Pie</button>
+        </div>
+      </div>
+      <!-- Bar view -->
+      <div id="alloc-bar-view" class="cards-row">
         <div class="card" style="flex:2;min-width:280px">
           <div class="chart-label" style="margin-bottom:12px">Value by Metal</div>
           <canvas id="chart-allocation" height="80"></canvas>
@@ -93,6 +100,17 @@
         <div class="card" style="flex:2;min-width:280px">
           <div class="chart-label" style="margin-bottom:12px">Cost vs Market Value</div>
           <canvas id="chart-costvsvalue" height="80"></canvas>
+        </div>
+      </div>
+      <!-- Pie view -->
+      <div id="alloc-pie-view" class="hidden cards-row" style="justify-content:center">
+        <div class="card" style="max-width:340px;width:100%">
+          <div class="chart-label" style="margin-bottom:12px;text-align:center">Value by Metal</div>
+          <canvas id="chart-pie"></canvas>
+        </div>
+        <div class="card" style="max-width:340px;width:100%">
+          <div class="chart-label" style="margin-bottom:12px;text-align:center">Cost vs Market Value</div>
+          <canvas id="chart-pie-cost"></canvas>
         </div>
       </div>
     </section>

@@ -17,6 +17,8 @@ const METAL_COLORS = { gold:'#f5c842', silver:'#b0bec5', platinum:'#90caf9', pal
 
 let prices = {}, holdings = [], currentRange = '1M';
 let historyCharts = {}, allocationChart = null, costValueChart = null;
+let pieChart = null, pieCostChart = null;
+let allocView = localStorage.getItem('allocView') || 'bar';
 let groupCollapsed = { gold:false, silver:false, platinum:false, palladium:false };
 // sort state per metal group: { col: 'description'|'oz'|'cost'|'mv'|'gl'|'date'|null, dir: 1|-1 }
 let groupSort = { gold:{col:null,dir:1}, silver:{col:null,dir:1}, platinum:{col:null,dir:1}, palladium:{col:null,dir:1} };
@@ -262,38 +264,98 @@ function renderHistoryChart(metal, { labels, data }) {
   });
 }
 
-// ─── Bar Charts ──────────────────────────────────────────────────────────
+// ─── Alloc view toggle ───────────────────────────────────────────────────
+function setAllocView(view) {
+  allocView = view;
+  localStorage.setItem('allocView', view);
+  document.getElementById('alloc-bar-view').classList.toggle('hidden', view !== 'bar');
+  document.getElementById('alloc-pie-view').classList.toggle('hidden', view !== 'pie');
+  document.getElementById('alloc-bar-btn').classList.toggle('active', view === 'bar');
+  document.getElementById('alloc-pie-btn').classList.toggle('active', view === 'pie');
+  if (window._lastPortfolio) renderAllocationCharts(window._lastPortfolio);
+}
+
+// ─── Bar / Pie Charts ─────────────────────────────────────────────────────
 function renderAllocationCharts(p) {
   if (!p?.by_metal) return;
   const cc     = chartTheme();
   const labels = p.by_metal.map(m => METAL_LABELS[m.metal]);
   const colors = p.by_metal.map(m => METAL_COLORS[m.metal]);
 
-  if (allocationChart) allocationChart.destroy();
-  const ac = document.getElementById('chart-allocation');
-  if (ac && p.by_metal.length) {
-    allocationChart = new Chart(ac, {
-      type: 'bar',
-      data: { labels, datasets:[{ data: p.by_metal.map(m => m.market_value), backgroundColor: colors, borderRadius:6, borderSkipped:false }] },
-      options: barOpts(cc)
-    });
-  }
+  if (allocView === 'bar') {
+    if (allocationChart) allocationChart.destroy();
+    const ac = document.getElementById('chart-allocation');
+    if (ac && p.by_metal.length) {
+      allocationChart = new Chart(ac, {
+        type: 'bar',
+        data: { labels, datasets:[{ data: p.by_metal.map(m => m.market_value), backgroundColor: colors, borderRadius:6, borderSkipped:false }] },
+        options: barOpts(cc)
+      });
+    }
 
-  if (costValueChart) costValueChart.destroy();
-  const cv = document.getElementById('chart-costvsvalue');
-  if (cv && p.by_metal.length) {
-    costValueChart = new Chart(cv, {
-      type: 'bar',
-      data: {
-        labels,
-        datasets: [
-          { label:'Cost Basis',   data: p.by_metal.map(m => m.total_cost),    backgroundColor: colors.map(c => hexAlpha(c,0.35)), borderRadius:6, borderSkipped:false },
-          { label:'Market Value', data: p.by_metal.map(m => m.market_value),  backgroundColor: colors, borderRadius:6, borderSkipped:false }
-        ]
-      },
-      options: { ...barOpts(cc), plugins:{ ...barOpts(cc).plugins, legend:{ display:true, labels:{ color:cc.muted, boxWidth:10, padding:12, font:{ size:11 } } } } }
-    });
+    if (costValueChart) costValueChart.destroy();
+    const cv = document.getElementById('chart-costvsvalue');
+    if (cv && p.by_metal.length) {
+      costValueChart = new Chart(cv, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [
+            { label:'Cost Basis',   data: p.by_metal.map(m => m.total_cost),    backgroundColor: colors.map(c => hexAlpha(c,0.35)), borderRadius:6, borderSkipped:false },
+            { label:'Market Value', data: p.by_metal.map(m => m.market_value),  backgroundColor: colors, borderRadius:6, borderSkipped:false }
+          ]
+        },
+        options: { ...barOpts(cc), plugins:{ ...barOpts(cc).plugins, legend:{ display:true, labels:{ color:cc.muted, boxWidth:10, padding:12, font:{ size:11 } } } } }
+      });
+    }
+  } else {
+    if (pieChart) pieChart.destroy();
+    const pc = document.getElementById('chart-pie');
+    if (pc && p.by_metal.length) {
+      pieChart = new Chart(pc, {
+        type: 'doughnut',
+        data: { labels, datasets:[{ data: p.by_metal.map(m => m.market_value), backgroundColor: colors, borderWidth: 2, borderColor: cc.tooltip }] },
+        options: pieOpts(cc)
+      });
+    }
+
+    if (pieCostChart) pieCostChart.destroy();
+    const pcc = document.getElementById('chart-pie-cost');
+    if (pcc && p.by_metal.length) {
+      const costData  = p.by_metal.map(m => m.total_cost);
+      const valueData = p.by_metal.map(m => m.market_value);
+      pieCostChart = new Chart(pcc, {
+        type: 'doughnut',
+        data: {
+          labels: ['Cost Basis', 'Unrealized Gain'],
+          datasets:[{
+            data: [p.total_cost, Math.max(0, p.total_value - p.total_cost)],
+            backgroundColor: ['rgba(90,98,130,0.7)', '#4caf82'],
+            borderWidth: 2,
+            borderColor: cc.tooltip
+          }]
+        },
+        options: pieOpts(cc)
+      });
+    }
   }
+}
+
+function pieOpts(cc) {
+  return {
+    responsive: true,
+    plugins: {
+      legend: { display:true, position:'bottom', labels:{ color:cc.muted, boxWidth:12, padding:14, font:{ size:11 } } },
+      tooltip: {
+        backgroundColor: cc.tooltip,
+        titleColor: cc.text,
+        bodyColor: cc.text,
+        borderColor: cc.border,
+        borderWidth: 1,
+        callbacks: { label: ctx => ' $' + ctx.raw.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}) }
+      }
+    }
+  };
 }
 
 function barOpts(cc) {
@@ -333,6 +395,8 @@ function redrawCharts() {
   historyCharts = {};
   if (allocationChart) { allocationChart.destroy(); allocationChart = null; }
   if (costValueChart)  { costValueChart.destroy();  costValueChart  = null; }
+  if (pieChart)        { pieChart.destroy();        pieChart        = null; }
+  if (pieCostChart)    { pieCostChart.destroy();    pieCostChart    = null; }
   loadHistory();
   renderAllocationCharts(window._lastPortfolio);
 }
@@ -625,6 +689,13 @@ async function refreshPrices() {
 initTheme();
 initVisibility();
 initHistorySection();
+// Apply persisted alloc view without re-saving
+(function() {
+  document.getElementById('alloc-bar-view').classList.toggle('hidden', allocView !== 'bar');
+  document.getElementById('alloc-pie-view').classList.toggle('hidden', allocView !== 'pie');
+  document.getElementById('alloc-bar-btn').classList.toggle('active', allocView === 'bar');
+  document.getElementById('alloc-pie-btn').classList.toggle('active', allocView === 'pie');
+})();
 load();
 loadHistory();
 setInterval(load, 5 * 60 * 1000);
