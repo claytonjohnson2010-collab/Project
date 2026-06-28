@@ -32,4 +32,28 @@ async def init_db():
                 updated_at TEXT DEFAULT (datetime('now'))
             )
         """)
+        await db.execute("""
+            CREATE TABLE IF NOT EXISTS coins (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                issuer TEXT NOT NULL,
+                reference TEXT,
+                n_number TEXT,
+                title TEXT NOT NULL,
+                year TEXT,
+                gregorian_year INTEGER,
+                mintmark TEXT,
+                marks TEXT,
+                ext_references TEXT,
+                comment TEXT,
+                quantity INTEGER DEFAULT 1,
+                for_exchange INTEGER DEFAULT 0,
+                grade TEXT,
+                from_set INTEGER DEFAULT 0,
+                buying_price REAL,
+                estimate REAL,
+                private_comment TEXT,
+                public_comment TEXT,
+                created_at TEXT DEFAULT (datetime('now'))
+            )
+        """)
         await db.commit()

@@ -9,6 +9,7 @@ import os
 
 from backend.database import get_db, init_db
 from backend.prices import get_prices, convert_to_oz, fetch_history, fetch_metrics, TICKERS
+from backend.coins import seed_coins
 
 app = FastAPI(title="Precious Metals Tracker")
 
@@ -18,6 +19,7 @@ FRONTEND_DIR = os.environ.get("FRONTEND_DIR", "/app/frontend")
 @app.on_event("startup")
 async def startup():
     await init_db()
+    await seed_coins()
 
 
 # --- Models ---
@@ -182,6 +184,146 @@ async def all_metrics():
     data["gold_silver_ratio"] = round(gp / sp, 2) if gp and sp else None
 
     return data
+
+
+# --- Coin Collection ---
+
+@app.get("/api/coins")
+async def list_coins(
+    db: aiosqlite.Connection = Depends(get_db),
+    search: Optional[str] = None,
+    issuer: Optional[str] = None,
+    grade: Optional[str] = None,
+    year_from: Optional[int] = None,
+    year_to: Optional[int] = None,
+):
+    clauses, params = [], []
+    if search:
+        term = f"%{search}%"
+        clauses.append(
+            "(issuer LIKE ? OR title LIKE ? OR reference LIKE ? OR grade LIKE ?"
+            " OR comment LIKE ? OR public_comment LIKE ? OR private_comment LIKE ?)"
+        )
+        params.extend([term] * 7)
+    if issuer:
+        clauses.append("issuer = ?")
+        params.append(issuer)
+    if grade:
+        clauses.append("grade = ?")
+        params.append(grade)
+    if year_from:
+        clauses.append("gregorian_year >= ?")
+        params.append(year_from)
+    if year_to:
+        clauses.append("gregorian_year <= ?")
+        params.append(year_to)
+    where = ("WHERE " + " AND ".join(clauses)) if clauses else ""
+    rows = await db.execute_fetchall(
+        f"SELECT * FROM coins {where} ORDER BY issuer, gregorian_year, reference",
+        params,
+    )
+    return [dict(r) for r in rows]
+
+
+@app.get("/api/coins/stats")
+async def coins_stats(db: aiosqlite.Connection = Depends(get_db)):
+    totals = await db.execute_fetchall(
+        "SELECT COUNT(*) as n, SUM(estimate) as est, SUM(buying_price) as cost,"
+        " SUM(for_exchange) as exch FROM coins"
+    )
+    t = dict(totals[0])
+
+    by_issuer = await db.execute_fetchall(
+        "SELECT issuer, COUNT(*) as count, SUM(estimate) as estimate"
+        " FROM coins GROUP BY issuer ORDER BY count DESC"
+    )
+    grades = await db.execute_fetchall(
+        "SELECT COALESCE(NULLIF(grade,''), 'Ungraded') as grade, COUNT(*) as count"
+        " FROM coins GROUP BY grade ORDER BY count DESC"
+    )
+    decades = await db.execute_fetchall(
+        """SELECT
+             CASE WHEN gregorian_year IS NULL THEN 'Unknown'
+                  ELSE CAST(gregorian_year/10*10 AS TEXT) || 's' END AS decade,
+             COUNT(*) as count
+           FROM coins
+           GROUP BY decade
+           ORDER BY MIN(gregorian_year)"""
+    )
+    dups = await db.execute_fetchall(
+        """SELECT COUNT(*) as n FROM (
+             SELECT issuer, reference, year, mintmark
+             FROM coins
+             GROUP BY issuer, reference, year, mintmark
+             HAVING COUNT(*) > 1
+           )"""
+    )
+    return {
+        "total_coins": t["n"] or 0,
+        "total_estimate": round(t["est"] or 0, 2),
+        "total_cost": round(t["cost"] or 0, 2),
+        "for_exchange_count": t["exch"] or 0,
+        "duplicates_count": dict(dups[0])["n"] or 0,
+        "by_issuer": [dict(r) for r in by_issuer],
+        "grade_distribution": [dict(r) for r in grades],
+        "decade_distribution": [dict(r) for r in decades],
+    }
+
+
+@app.get("/api/coins/duplicates")
+async def coins_duplicates(db: aiosqlite.Connection = Depends(get_db)):
+    groups = await db.execute_fetchall(
+        """SELECT issuer, reference, title, year, mintmark, COUNT(*) as count
+           FROM coins
+           GROUP BY issuer, reference, year, mintmark
+           HAVING COUNT(*) > 1"""
+    )
+    results = []
+    for g in groups:
+        gr = dict(g)
+        detail = await db.execute_fetchall(
+            "SELECT * FROM coins WHERE issuer=? AND reference=? AND year=? AND mintmark=?",
+            (gr["issuer"], gr["reference"], gr["year"], gr["mintmark"]),
+        )
+        results.append({**gr, "coins": [dict(c) for c in detail]})
+    return results
+
+
+@app.get("/api/coins/gaps")
+async def coins_gaps(db: aiosqlite.Connection = Depends(get_db)):
+    series = await db.execute_fetchall(
+        """SELECT issuer, reference, title,
+             MIN(gregorian_year) as min_year,
+             MAX(gregorian_year) as max_year,
+             COUNT(DISTINCT gregorian_year) as year_count
+           FROM coins
+           WHERE gregorian_year IS NOT NULL AND gregorian_year > 0
+           GROUP BY issuer, reference
+           HAVING year_count > 1 AND (max_year - min_year + 1) > year_count
+           ORDER BY issuer, reference"""
+    )
+    results = []
+    for s in series:
+        sr = dict(s)
+        yr_rows = await db.execute_fetchall(
+            "SELECT DISTINCT gregorian_year FROM coins"
+            " WHERE issuer=? AND reference=? AND gregorian_year IS NOT NULL"
+            " ORDER BY gregorian_year",
+            (sr["issuer"], sr["reference"]),
+        )
+        owned = set(r["gregorian_year"] for r in yr_rows)
+        gaps  = sorted(set(range(sr["min_year"], sr["max_year"] + 1)) - owned)
+        if gaps:
+            results.append({
+                "issuer": sr["issuer"],
+                "reference": sr["reference"],
+                "title": sr["title"],
+                "years_owned": sorted(owned),
+                "gaps": gaps,
+                "min_year": sr["min_year"],
+                "max_year": sr["max_year"],
+            })
+    return results
 
 
 # --- Serve frontend ---
