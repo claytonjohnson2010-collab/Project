@@ -18,6 +18,9 @@ const METAL_COLORS = { gold:'#f5c842', silver:'#b0bec5', platinum:'#90caf9', pal
 let prices = {}, holdings = [], currentRange = '1M';
 let historyCharts = {}, allocationChart = null, costValueChart = null;
 let groupCollapsed = { gold:false, silver:false, platinum:false, palladium:false };
+// sort state per metal group: { col: 'description'|'oz'|'cost'|'mv'|'gl'|'date'|null, dir: 1|-1 }
+let groupSort = { gold:{col:null,dir:1}, silver:{col:null,dir:1}, platinum:{col:null,dir:1}, palladium:{col:null,dir:1} };
+let historyCollapsed = localStorage.getItem('historyCollapsed') === 'true';
 
 // ─── Theme ─────────────────────────────────────────────────────────────
 function initTheme() {
@@ -332,6 +335,30 @@ function redrawCharts() {
   renderAllocationCharts(window._lastPortfolio);
 }
 
+// ─── Price History collapse ──────────────────────────────────────────────
+function initHistorySection() {
+  applyHistoryCollapse();
+}
+function toggleHistorySection() {
+  historyCollapsed = !historyCollapsed;
+  localStorage.setItem('historyCollapsed', historyCollapsed);
+  applyHistoryCollapse();
+}
+function applyHistoryCollapse() {
+  const grid = document.getElementById('history-grid');
+  const icon = document.getElementById('history-toggle-icon');
+  const tabs = document.getElementById('range-tabs');
+  if (historyCollapsed) {
+    grid.style.display = 'none';
+    tabs.style.display = 'none';
+    icon.textContent = '▸';
+  } else {
+    grid.style.display = '';
+    tabs.style.display = '';
+    icon.textContent = '▾';
+  }
+}
+
 // ─── By-Metal Cards ──────────────────────────────────────────────────────
 function renderByMetal(byMetal) {
   const el = document.getElementById('by-metal');
@@ -364,6 +391,50 @@ function toOz(qty, unit) {
   return qty;
 }
 
+// sortable column definitions: [display label, sort key, sortable?]
+const SORT_COLS = [
+  ['Description', 'description', true],
+  ['Qty',         'quantity',    true],
+  ['Unit',        null,          false],
+  ['Troy oz',     'oz',          true],
+  ['Cost Basis',  'cost',        true],
+  ['Mkt Value',   'mv',          true],
+  ['Gain / Loss', 'gl',          true],
+  ['Date',        'date',        true],
+  ['Notes',       null,          false],
+  ['',            null,          false],
+];
+
+function sortedRows(rows, metal, priceMap) {
+  const { col, dir } = groupSort[metal];
+  if (!col) return rows;
+  const price = priceMap[metal] || 0;
+  return [...rows].sort((a, b) => {
+    let av, bv;
+    if (col === 'description') { av = a.description.toLowerCase(); bv = b.description.toLowerCase(); }
+    else if (col === 'quantity')  { av = a.quantity; bv = b.quantity; }
+    else if (col === 'oz')        { av = toOz(a.quantity, a.unit); bv = toOz(b.quantity, b.unit); }
+    else if (col === 'cost')      { av = a.cost_basis; bv = b.cost_basis; }
+    else if (col === 'mv')        { av = toOz(a.quantity, a.unit) * price; bv = toOz(b.quantity, b.unit) * price; }
+    else if (col === 'gl')        { av = toOz(a.quantity, a.unit) * price - a.cost_basis; bv = toOz(b.quantity, b.unit) * price - b.cost_basis; }
+    else if (col === 'date')      { av = a.purchase_date || ''; bv = b.purchase_date || ''; }
+    else return 0;
+    if (av < bv) return -1 * dir;
+    if (av > bv) return  1 * dir;
+    return 0;
+  });
+}
+
+function thHtml(metal) {
+  const { col: activeCol, dir } = groupSort[metal];
+  return SORT_COLS.map(([label, key, sortable]) => {
+    if (!sortable) return `<th>${label}</th>`;
+    const isActive = activeCol === key;
+    const arrow    = isActive ? (dir === 1 ? ' ↑' : ' ↓') : '';
+    return `<th class="th-sort${isActive ? ' th-sort-active' : ''}" data-sort-col="${key}" data-sort-metal="${metal}">${label}${arrow}</th>`;
+  }).join('');
+}
+
 function renderHoldings(list, priceMap) {
   const container = document.getElementById('holdings-groups');
   container.innerHTML = '';
@@ -385,7 +456,8 @@ function renderHoldings(list, priceMap) {
     const totalGL   = totalMV - totalCost;
     const pos       = totalGL >= 0;
 
-    const rowsHtml = rows.map(h => {
+    const displayRows = sortedRows(rows, metal, priceMap);
+    const rowsHtml = displayRows.map(h => {
       const oz    = toOz(h.quantity, h.unit);
       const price = priceMap[metal] || 0;
       const mv    = oz * price;
@@ -425,11 +497,7 @@ function renderHoldings(list, priceMap) {
         <div class="group-body ${collapsed ? 'hidden' : ''}">
           <div class="table-wrap">
             <table>
-              <thead><tr>
-                <th>Description</th><th>Qty</th><th>Unit</th><th>Troy oz</th>
-                <th>Cost Basis</th><th>Market Value</th><th>Gain / Loss</th>
-                <th>Date</th><th>Notes</th><th></th>
-              </tr></thead>
+              <thead><tr>${thHtml(metal)}</tr></thead>
               <tbody>${rowsHtml}</tbody>
             </table>
           </div>
@@ -449,11 +517,27 @@ function toggleAllGroups(expand) {
 
 // ─── Modal ────────────────────────────────────────────────────────────────
 document.addEventListener('click', e => {
+  // Edit / delete buttons
   const btn = e.target.closest('[data-action]');
-  if (!btn) return;
-  const id = Number(btn.dataset.id);
-  if (btn.dataset.action === 'edit')   openEditModal(id);
-  if (btn.dataset.action === 'delete') deleteHolding(id);
+  if (btn) {
+    const id = Number(btn.dataset.id);
+    if (btn.dataset.action === 'edit')   openEditModal(id);
+    if (btn.dataset.action === 'delete') deleteHolding(id);
+    return;
+  }
+  // Sortable column headers
+  const th = e.target.closest('[data-sort-col]');
+  if (th) {
+    const col   = th.dataset.sortCol;
+    const metal = th.dataset.sortMetal;
+    if (groupSort[metal].col === col) {
+      groupSort[metal].dir *= -1;
+    } else {
+      groupSort[metal].col = col;
+      groupSort[metal].dir = 1;
+    }
+    renderHoldings(holdings, prices);
+  }
 });
 
 function setQty(val) { document.getElementById('f-quantity').value = val; }
@@ -523,6 +607,7 @@ function hexAlpha(hex, a) {
 // ─── Init ─────────────────────────────────────────────────────────────────
 initTheme();
 initVisibility();
+initHistorySection();
 load();
 loadHistory();
 setInterval(load, 5 * 60 * 1000);

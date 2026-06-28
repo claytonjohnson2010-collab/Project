@@ -545,6 +545,16 @@ input:focus, select:focus {
 }
 .frac-btn:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
 
+/* ─── Sortable headers ── */
+.th-sort {
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  transition: color 0.15s;
+}
+.th-sort:hover { color: var(--text); }
+.th-sort-active { color: var(--accent) !important; }
+
 /* ═══════════════════════════════════════
    RESPONSIVE
 ═══════════════════════════════════════ */
