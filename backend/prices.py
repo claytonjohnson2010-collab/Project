@@ -145,7 +145,7 @@ async def fetch_metrics(metal: str) -> dict:
                 "fifty_two_week_high": round(max(valid), 2) if valid else None,
                 "fifty_two_week_low": round(min(valid), 2) if valid else None,
                 "regular_market_price": meta.get("regularMarketPrice"),
-                "previous_close": meta.get("chartPreviousClose"),
+                "previous_close": meta.get("regularMarketPreviousClose") or meta.get("previousClose") or meta.get("chartPreviousClose"),
             }
     except Exception as e:
         logger.warning(f"Metrics fetch failed for {metal}: {e}")
