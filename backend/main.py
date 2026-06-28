@@ -167,7 +167,7 @@ async def portfolio_summary(db: aiosqlite.Connection = Depends(get_db)):
 @app.get("/api/history/{metal}")
 async def metal_history(
     metal: str,
-    range: str = Query("1M", pattern="^(1W|1M|3M|6M|1Y|5Y)$"),
+    range: str = Query("1M", pattern="^(1D|1W|1M|3M|6M|1Y|5Y)$"),
 ):
     if metal not in TICKERS:
         raise HTTPException(400, f"metal must be one of {list(TICKERS.keys())}")

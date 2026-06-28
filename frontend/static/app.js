@@ -352,7 +352,13 @@ function pieOpts(cc) {
         bodyColor: cc.text,
         borderColor: cc.border,
         borderWidth: 1,
-        callbacks: { label: ctx => ' $' + ctx.raw.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}) }
+        callbacks: {
+          label: ctx => {
+            const total = ctx.chart.data.datasets[0].data.reduce((s, v) => s + v, 0);
+            const pct   = total > 0 ? (ctx.raw / total * 100).toFixed(1) : '0.0';
+            return ` $${ctx.raw.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}  (${pct}%)`;
+          }
+        }
       }
     }
   };

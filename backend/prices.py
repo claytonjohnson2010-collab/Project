@@ -19,6 +19,7 @@ TICKERS = {
 OZ_TO_G = 31.1035
 
 RANGE_TO_YF = {
+    "1D": ("5m", "1d"),
     "1W": ("1d", "5d"),
     "1M": ("1d", "1mo"),
     "3M": ("1d", "3mo"),
@@ -113,9 +114,9 @@ async def fetch_history(metal: str, range_key: str) -> dict:
                 if close is None:
                     continue
                 dt = datetime.utcfromtimestamp(ts)
-                if range_key in ("1W", "1M", "3M"):
-                    labels.append(dt.strftime("%b %d"))
-                elif range_key == "6M":
+                if range_key == "1D":
+                    labels.append(dt.strftime("%H:%M"))
+                elif range_key in ("1W", "1M", "3M", "6M"):
                     labels.append(dt.strftime("%b %d"))
                 else:
                     labels.append(dt.strftime("%b %Y"))
