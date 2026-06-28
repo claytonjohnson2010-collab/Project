@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Portfolio Tracker</title>
+  <title>Precious Metals Tracker</title>
   <link rel="stylesheet" href="/static/style.css" />
   <script src="/static/chart.min.js"></script>
 </head>
@@ -14,11 +14,7 @@
     <div class="topnav-inner">
       <div class="topnav-brand">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-        Portfolio Tracker
-      </div>
-      <div class="topnav-tabs" id="topnav-tabs">
-        <button class="tab-btn active" data-tab="metals" onclick="switchTab('metals')">Metals</button>
-        <button class="tab-btn" data-tab="coins" onclick="switchTab('coins')">Coin Collection</button>
+        Metals Tracker
       </div>
       <div class="topnav-right">
         <span id="last-updated" class="muted text-xs"></span>
@@ -27,219 +23,97 @@
     </div>
   </nav>
 
-  <!-- ══════════════════════════════════════ METALS TAB ══════════════════════════════════════ -->
-  <div id="metals-panel" class="tab-panel">
-
-    <!-- ── Portfolio Hero ── -->
-    <div class="hero">
-      <div class="hero-inner">
-        <div class="hero-left">
-          <div class="hero-eyebrow">Total Portfolio Value</div>
-          <div class="hero-value" id="hero-value">—</div>
-          <div class="hero-gl" id="hero-gl"></div>
-          <div class="hero-cost">Cost basis: <span id="hero-cost">—</span></div>
-        </div>
-        <div class="hero-right" id="hero-allocation"></div>
-        <button class="visibility-btn" onclick="toggleVisibility()" id="visibility-btn" title="Show/hide balances">
-          <svg id="eye-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-        </button>
+  <!-- ── Portfolio Hero ── -->
+  <div class="hero">
+    <div class="hero-inner">
+      <div class="hero-left">
+        <div class="hero-eyebrow">Total Portfolio Value</div>
+        <div class="hero-value" id="hero-value">—</div>
+        <div class="hero-gl" id="hero-gl"></div>
+        <div class="hero-cost">Cost basis: <span id="hero-cost">—</span></div>
       </div>
+      <div class="hero-right" id="hero-allocation"></div>
+      <button class="visibility-btn" onclick="toggleVisibility()" id="visibility-btn" title="Show/hide balances">
+        <svg id="eye-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+      </button>
     </div>
+  </div>
 
-    <main>
+  <main>
 
-      <!-- Spot Prices -->
-      <section>
-        <div class="section-label">Live Spot Prices <span class="muted">(per troy oz)</span></div>
-        <div class="cards-row" id="spot-prices"></div>
-      </section>
+    <!-- Spot Prices -->
+    <section>
+      <div class="section-label">Live Spot Prices <span class="muted">(per troy oz)</span></div>
+      <div class="cards-row" id="spot-prices"></div>
+    </section>
 
-      <!-- Market Metrics -->
-      <section>
-        <div class="section-label">Market Metrics</div>
-        <div class="cards-row" id="metrics-row"></div>
-      </section>
+    <!-- Market Metrics -->
+    <section>
+      <div class="section-label">Market Metrics</div>
+      <div class="cards-row" id="metrics-row"></div>
+    </section>
 
-      <!-- Historical Charts -->
-      <section>
-        <div class="section-header">
-          <div class="section-label" style="margin-bottom:0">Price History</div>
-          <div style="display:flex;align-items:center;gap:8px">
-            <div class="range-tabs" id="range-tabs">
-              <button class="range-btn active" onclick="setRange(this,'1W')">1W</button>
-              <button class="range-btn" onclick="setRange(this,'1M')">1M</button>
-              <button class="range-btn" onclick="setRange(this,'3M')">3M</button>
-              <button class="range-btn" onclick="setRange(this,'6M')">6M</button>
-              <button class="range-btn" onclick="setRange(this,'1Y')">1Y</button>
-              <button class="range-btn" onclick="setRange(this,'5Y')">5Y</button>
-            </div>
-            <button class="icon-btn" id="history-toggle-btn" onclick="toggleHistorySection()" title="Collapse/expand charts">
-              <span id="history-toggle-icon">▾</span>
-            </button>
+    <!-- Historical Charts -->
+    <section>
+      <div class="section-header">
+        <div class="section-label" style="margin-bottom:0">Price History</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="range-tabs" id="range-tabs">
+            <button class="range-btn active" onclick="setRange(this,'1W')">1W</button>
+            <button class="range-btn" onclick="setRange(this,'1M')">1M</button>
+            <button class="range-btn" onclick="setRange(this,'3M')">3M</button>
+            <button class="range-btn" onclick="setRange(this,'6M')">6M</button>
+            <button class="range-btn" onclick="setRange(this,'1Y')">1Y</button>
+            <button class="range-btn" onclick="setRange(this,'5Y')">5Y</button>
           </div>
+          <button class="icon-btn" id="history-toggle-btn" onclick="toggleHistorySection()" title="Collapse/expand charts">
+            <span id="history-toggle-icon">▾</span>
+          </button>
         </div>
-        <div id="history-grid" class="charts-grid">
-          <div class="card chart-card"><div class="chart-label gold-text">Gold</div><canvas id="chart-gold"></canvas></div>
-          <div class="card chart-card"><div class="chart-label silver-text">Silver</div><canvas id="chart-silver"></canvas></div>
-          <div class="card chart-card"><div class="chart-label platinum-text">Platinum</div><canvas id="chart-platinum"></canvas></div>
-          <div class="card chart-card"><div class="chart-label palladium-text">Palladium</div><canvas id="chart-palladium"></canvas></div>
-        </div>
-      </section>
-
-      <!-- Portfolio Allocation Charts -->
-      <section>
-        <div class="section-label">Portfolio Allocation</div>
-        <div class="cards-row">
-          <div class="card" style="flex:2;min-width:280px">
-            <div class="chart-label" style="margin-bottom:12px">Value by Metal</div>
-            <canvas id="chart-allocation" height="80"></canvas>
-          </div>
-          <div class="card" style="flex:2;min-width:280px">
-            <div class="chart-label" style="margin-bottom:12px">Cost vs Market Value</div>
-            <canvas id="chart-costvsvalue" height="80"></canvas>
-          </div>
-        </div>
-      </section>
-
-      <!-- By Metal -->
-      <section>
-        <div class="section-label">Holdings by Metal</div>
-        <div class="cards-row" id="by-metal"></div>
-      </section>
-
-      <!-- All Holdings -->
-      <section>
-        <div class="section-header">
-          <div class="section-label" style="margin-bottom:0">All Holdings</div>
-          <div class="btn-group">
-            <button class="btn btn-sm" onclick="toggleAllGroups(true)">Expand All</button>
-            <button class="btn btn-sm" onclick="toggleAllGroups(false)">Collapse All</button>
-            <button class="btn btn-primary btn-sm" onclick="openAddModal()">+ Add Holding</button>
-          </div>
-        </div>
-        <div id="holdings-groups"></div>
-      </section>
-
-    </main>
-
-  </div><!-- /metals-panel -->
-
-  <!-- ══════════════════════════════════════ COINS TAB ══════════════════════════════════════ -->
-  <div id="coins-panel" class="tab-panel hidden">
-
-    <!-- Coins Hero -->
-    <div class="hero" id="coins-hero">
-      <div class="hero-inner">
-        <div class="hero-left">
-          <div class="hero-eyebrow">Coin Collection</div>
-          <div class="hero-value" id="coins-hero-count">—</div>
-          <div class="hero-gl" id="coins-hero-sub" style="color:var(--muted2);font-size:0.9rem"></div>
-          <div class="hero-cost">Estimated value: <span id="coins-hero-est">—</span></div>
-        </div>
-        <div class="hero-right" id="coins-hero-allocation"></div>
       </div>
-    </div>
+      <div id="history-grid" class="charts-grid">
+        <div class="card chart-card"><div class="chart-label gold-text">Gold</div><canvas id="chart-gold"></canvas></div>
+        <div class="card chart-card"><div class="chart-label silver-text">Silver</div><canvas id="chart-silver"></canvas></div>
+        <div class="card chart-card"><div class="chart-label platinum-text">Platinum</div><canvas id="chart-platinum"></canvas></div>
+        <div class="card chart-card"><div class="chart-label palladium-text">Palladium</div><canvas id="chart-palladium"></canvas></div>
+      </div>
+    </section>
 
-    <main class="coins-main">
+    <!-- Portfolio Allocation Charts -->
+    <section>
+      <div class="section-label">Portfolio Allocation</div>
+      <div class="cards-row">
+        <div class="card" style="flex:2;min-width:280px">
+          <div class="chart-label" style="margin-bottom:12px">Value by Metal</div>
+          <canvas id="chart-allocation" height="80"></canvas>
+        </div>
+        <div class="card" style="flex:2;min-width:280px">
+          <div class="chart-label" style="margin-bottom:12px">Cost vs Market Value</div>
+          <canvas id="chart-costvsvalue" height="80"></canvas>
+        </div>
+      </div>
+    </section>
 
-      <!-- Stat Cards -->
-      <section>
-        <div class="section-label">Overview</div>
-        <div class="cards-row" id="coin-stat-cards"></div>
-      </section>
+    <!-- By Metal -->
+    <section>
+      <div class="section-label">Holdings by Metal</div>
+      <div class="cards-row" id="by-metal"></div>
+    </section>
 
-      <!-- Grade Distribution -->
-      <section>
-        <div class="section-header">
-          <div class="section-label" style="margin-bottom:0">Grade Distribution</div>
+    <!-- All Holdings -->
+    <section>
+      <div class="section-header">
+        <div class="section-label" style="margin-bottom:0">All Holdings</div>
+        <div class="btn-group">
+          <button class="btn btn-sm" onclick="toggleAllGroups(true)">Expand All</button>
+          <button class="btn btn-sm" onclick="toggleAllGroups(false)">Collapse All</button>
+          <button class="btn btn-primary btn-sm" onclick="openAddModal()">+ Add Holding</button>
         </div>
-        <div class="cards-row">
-          <div class="card" style="flex:2;min-width:280px">
-            <canvas id="chart-grades" height="80"></canvas>
-          </div>
-          <div class="card" style="flex:2;min-width:280px">
-            <canvas id="chart-decades" height="80"></canvas>
-          </div>
-        </div>
-      </section>
+      </div>
+      <div id="holdings-groups"></div>
+    </section>
 
-      <!-- By Country -->
-      <section>
-        <div class="section-label">By Country</div>
-        <div class="cards-row" id="coins-by-country"></div>
-      </section>
-
-      <!-- All Coins Table -->
-      <section>
-        <div class="section-header">
-          <div class="section-label" style="margin-bottom:0">All Coins</div>
-          <div class="btn-group">
-            <button class="btn btn-sm" onclick="exportCoinsCsv()">Export CSV</button>
-          </div>
-        </div>
-        <!-- Filters -->
-        <div class="coin-filters">
-          <input type="text" id="coin-search" placeholder="Search coins…" oninput="applyCoinFilters()" />
-          <select id="coin-filter-issuer" onchange="applyCoinFilters()">
-            <option value="">All Countries</option>
-          </select>
-          <select id="coin-filter-grade" onchange="applyCoinFilters()">
-            <option value="">All Grades</option>
-          </select>
-          <input type="number" id="coin-year-from" placeholder="Year from" min="1" max="2100" oninput="applyCoinFilters()" />
-          <input type="number" id="coin-year-to"   placeholder="Year to"   min="1" max="2100" oninput="applyCoinFilters()" />
-          <button class="btn btn-sm" onclick="clearCoinFilters()">Clear</button>
-        </div>
-        <div class="table-wrap" style="margin-top:10px">
-          <table id="coins-table">
-            <thead>
-              <tr>
-                <th class="th-sort" data-coin-sort="issuer">Country</th>
-                <th class="th-sort" data-coin-sort="title">Coin</th>
-                <th class="th-sort" data-coin-sort="gregorian_year">Year</th>
-                <th>Mint</th>
-                <th class="th-sort" data-coin-sort="grade">Grade</th>
-                <th class="th-sort" data-coin-sort="estimate">Est. Value</th>
-                <th>Notes</th>
-              </tr>
-            </thead>
-            <tbody id="coins-tbody"></tbody>
-          </table>
-        </div>
-        <div id="coins-table-empty" class="no-data-msg hidden">No coins match the current filters.</div>
-        <div id="coins-table-count" class="text-xs muted" style="margin-top:8px;text-align:right"></div>
-      </section>
-
-      <!-- Duplicates -->
-      <section id="dup-section">
-        <div class="section-header" onclick="toggleCoinSection('dup-body','dup-chevron')" style="cursor:pointer">
-          <div class="section-label" style="margin-bottom:0">
-            Duplicate Entries
-            <span id="dup-badge" class="coin-badge" style="display:none"></span>
-          </div>
-          <span id="dup-chevron" class="group-chevron">▾</span>
-        </div>
-        <div id="dup-body">
-          <div id="dup-list" class="muted text-xs">Loading…</div>
-        </div>
-      </section>
-
-      <!-- Gap Analysis / Want List -->
-      <section id="gap-section">
-        <div class="section-header" onclick="toggleCoinSection('gap-body','gap-chevron')" style="cursor:pointer">
-          <div class="section-label" style="margin-bottom:0">
-            Want List — Series Gaps
-            <span id="gap-badge" class="coin-badge" style="display:none"></span>
-          </div>
-          <span id="gap-chevron" class="group-chevron">▾</span>
-        </div>
-        <div id="gap-body">
-          <div id="gap-list" class="muted text-xs">Loading…</div>
-        </div>
-      </section>
-
-    </main>
-  </div><!-- /coins-panel -->
+  </main>
 
   <!-- Modal -->
   <div id="modal-overlay" class="hidden" onclick="closeModal(event)">
@@ -300,6 +174,5 @@
   </div>
 
   <script src="/static/app.js"></script>
-  <script src="/static/coins.js"></script>
 </body>
 </html>
