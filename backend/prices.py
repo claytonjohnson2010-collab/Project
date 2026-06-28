@@ -133,19 +133,36 @@ async def fetch_metrics(metal: str) -> dict:
     if not ticker:
         return {}
     try:
-        url = f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker}?interval=1d&range=1y"
         async with httpx.AsyncClient(timeout=15) as client:
-            r = await client.get(url, headers={"User-Agent": "Mozilla/5.0"})
-            r.raise_for_status()
-            d = r.json()
-            meta = d["chart"]["result"][0]["meta"]
-            closes = d["chart"]["result"][0]["indicators"]["quote"][0]["close"]
-            valid = [c for c in closes if c is not None]
+            # 1-year daily for 52-week range
+            r1 = await client.get(
+                f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker}?interval=1d&range=1y",
+                headers={"User-Agent": "Mozilla/5.0"},
+            )
+            r1.raise_for_status()
+            d1 = r1.json()
+            result1 = d1["chart"]["result"][0]
+            meta = result1["meta"]
+            closes_1y = result1["indicators"]["quote"][0]["close"]
+            valid_1y = [c for c in closes_1y if c is not None]
+
+            # 5-day daily to get a reliable previous-day close
+            r5 = await client.get(
+                f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker}?interval=1d&range=5d",
+                headers={"User-Agent": "Mozilla/5.0"},
+            )
+            r5.raise_for_status()
+            d5 = r5.json()
+            closes_5d = d5["chart"]["result"][0]["indicators"]["quote"][0]["close"]
+            valid_5d = [c for c in closes_5d if c is not None]
+            # second-to-last is the previous completed trading day
+            previous_close = valid_5d[-2] if len(valid_5d) >= 2 else None
+
             return {
-                "fifty_two_week_high": round(max(valid), 2) if valid else None,
-                "fifty_two_week_low": round(min(valid), 2) if valid else None,
+                "fifty_two_week_high": round(max(valid_1y), 2) if valid_1y else None,
+                "fifty_two_week_low": round(min(valid_1y), 2) if valid_1y else None,
                 "regular_market_price": meta.get("regularMarketPrice"),
-                "previous_close": meta.get("regularMarketPreviousClose") or meta.get("previousClose") or meta.get("chartPreviousClose"),
+                "previous_close": round(previous_close, 2) if previous_close else None,
             }
     except Exception as e:
         logger.warning(f"Metrics fetch failed for {metal}: {e}")
